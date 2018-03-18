@@ -1,0 +1,34 @@
+    .heading{
+    	text-align: center;
+    	color: chocolate;
+    }
+    .top-result{
+    	padding: 25px;
+    }
+    .google{
+    	padding: 25px;
+    }
+    .yahoo{
+        padding: 25px;
+    }
+    .ask{
+    	padding: 25px;    	
+    }
+    .bing{
+       padding: 25px;
+    }
+    
+    .google img{
+    	width:125px;
+    }
+    .yahoo img{
+        width: 125px;
+    }
+    .ask img{
+    	width: 125px;
+    	height: 50px;
+    }
+    .bing img{
+    	width: 125px;
+    	height: 50px;
+    }
