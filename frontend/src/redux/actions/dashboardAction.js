@@ -39,12 +39,18 @@ export function googleStatus(status, result='', error){
     }
 }
 
-export const  google =  (keyword)=>{
+export const  google =  (keyword, adv, file)=>{
     return (dispatch)=>{
-        dispatch(googleStatus("LOADING"));      
+        dispatch(googleStatus("LOADING")); 
+        var query = "";
+        if(adv){
+           if(file !==""){
+            query += "&FileType="+file;
+           }  
+        }     
         axios({  
             method: 'GET',
-            url: `${PORT}/api/google?q=${keyword}`,      
+            url: `${PORT}/api/google?q=${keyword+query}`,      
           })
         .then((response)=> {
            dispatch(googleStatus("SUCCESS", response.data))
@@ -65,12 +71,18 @@ export function yahooStatus(status, result='', error){
     }
 }
 
-export const  yahoo =  (keyword)=>{
+export const  yahoo =  (keyword, adv, file)=>{
     return (dispatch)=>{
-        dispatch(yahooStatus("LOADING"));      
+        dispatch(yahooStatus("LOADING")); 
+         var query = "";
+        if(adv){
+           if(file !==""){
+            query += "&FileType="+file;
+           }  
+        }       
         axios({  
             method: 'GET',
-            url: `${PORT}/api/yahoo?q=${keyword}`,      
+            url: `${PORT}/api/yahoo?q=${keyword+query}`,      
           })
         .then((response)=> {
 			console.log(response)
@@ -92,12 +104,18 @@ export function bingStatus(status, result='', error){
     }
 }
 
-export const  bing =  (keyword)=>{
+export const  bing =  (keyword, adv, file)=>{
     return (dispatch)=>{
-        dispatch(bingStatus("LOADING"));      
+        dispatch(bingStatus("LOADING")); 
+         var query = "";
+        if(adv){
+           if(file !==""){
+            query += "&FileType="+file;
+           }  
+        }       
         axios({  
             method: 'GET',
-            url: `${PORT}/api/bing?q=${keyword}`,      
+            url: `${PORT}/api/bing?q=${keyword+query}`,      
           })
         .then((response)=> {
 			console.log(response)
@@ -119,12 +137,18 @@ export function askStatus(status, result='', error){
     }
 }
 
-export const  ask =  (keyword)=>{
+export const  ask =  (keyword, adv, file)=>{
     return (dispatch)=>{
-        dispatch(askStatus("LOADING"));      
+        dispatch(askStatus("LOADING"));
+         var query = "";
+        if(adv){
+           if(file !==""){
+            query += "&FileType="+file;
+           }  
+        }        
         axios({  
             method: 'GET',
-            url: `${PORT}/api/ask?q=${keyword}`,      
+            url: `${PORT}/api/ask?q=${keyword+query}`,      
           })
         .then((response)=> {
 			console.log(response)
