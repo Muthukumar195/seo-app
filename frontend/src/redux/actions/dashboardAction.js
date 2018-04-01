@@ -30,6 +30,32 @@ export const  dashboard =  (wel)=>{
     }
 
 }
+export function keywordsStatus(status, result='', error){  
+    return {
+        type : RC.KEYWORDS,
+        status,
+        result,
+        error
+    }
+}
+
+export const  keywords =  ()=>{
+    return (dispatch)=>{
+        dispatch(keywordsStatus("LOADING"));      
+        axios({  
+            method: 'GET',
+            url: `${PORT}/api/keywords`,
+          
+          })
+        .then((response)=> {      
+           dispatch(keywordsStatus("SUCCESS", response.data))
+        })
+        .catch((error)=> {
+          console.log(error);
+        });
+    }
+
+}
 export function googleStatus(status, result='', error){  
     return {
         type : RC.GOOGLE,
@@ -153,6 +179,36 @@ export const  ask =  (keyword, adv, file)=>{
         .then((response)=> {
 			console.log(response)
            dispatch(askStatus("SUCCESS", response.data))
+        })
+        .catch((error)=> {
+          console.log(error);
+        });
+    }
+
+}
+
+export function searchKeyStatus(status, result='', error){  
+    return {
+        type : RC.SEARCH_KEY,
+        status,
+        result,
+        error
+    }
+}
+
+export const  searchKey =  (search, authId)=>{
+    return (dispatch)=>{
+        dispatch(searchKeyStatus("LOADING")); 
+        axios({  
+            method: 'POST',
+            url: `${PORT}/api/search`, 
+      data: {
+        searchKey: search,
+        id: authId
+        }     
+          })
+        .then((response)=> {
+           dispatch(searchKeyStatus("SUCCESS", response.data))
         })
         .catch((error)=> {
           console.log(error);

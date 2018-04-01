@@ -3,7 +3,11 @@ const constants ={
 	GOOGLE : 'GOOGLE',
 	YAHOO : 'YAHOO',
 	BING : 'BING',
-	ASK : 'ASK'
+	ASK : 'ASK',
+	REGISTER : 'REGISTER',
+	LOGIN :'LOGIN',
+	SEARCH_KEY : 'SEARCH_KEY',
+	KEYWORDS :'KEYWORDS'
 }
 
 export default constants;

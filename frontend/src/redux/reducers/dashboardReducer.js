@@ -1,11 +1,13 @@
 import RC from '../constants';
 
 const initialState = {
-    dashboard: [],
+  dashboard: [],
 	google : '',
 	yahoo : '',
 	bing : '',
-	ask :''
+	ask :'',
+  searchKey:'',
+  keywords:[]
   }
 
   export default function dashboardReducer(state = initialState, action) {
@@ -15,6 +17,12 @@ const initialState = {
           ...state,
           status: action.status,
           dashboard: action.result
+        }
+    case RC.KEYWORDS:
+        return {
+          ...state,
+          status: action.status,
+          keywords: action.result
         }
 	   case RC.GOOGLE:
         return {
@@ -39,7 +47,7 @@ const initialState = {
           ...state,
           status: action.status,
           ask: action.result
-        }
+        }  
       default:
         return state
       }
