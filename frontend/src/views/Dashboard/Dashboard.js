@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
+import { Link } from "react-router-dom";
 import _ from 'lodash';    
 import Modal from 'react-responsive-modal';
 import 'react-responsive-modal/lib/react-responsive-modal.css';   
@@ -381,6 +382,7 @@ onOpenModal = () => {
 		 			<button onClick={this.onOpenModal} className="btn btn-success  btn-sm mar-right-10">login</button>
 				):(<div className="user-info ">
 					<span className="mar-right-10">{authEmail}</span>
+					<Link to="/profile">My Profile</Link>
 					<a  href="javascript:void(0);"onClick={this.logout}>log out</a>
 				</div>
 				)}
