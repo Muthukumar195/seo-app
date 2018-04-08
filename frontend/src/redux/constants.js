@@ -7,7 +7,8 @@ const constants ={
 	REGISTER : 'REGISTER',
 	LOGIN :'LOGIN',
 	SEARCH_KEY : 'SEARCH_KEY',
-	KEYWORDS :'KEYWORDS'
+	KEYWORDS :'KEYWORDS',
+	SEARCH_HISTORY : 'SEARCH_HISTORY'
 }
 
 export default constants;

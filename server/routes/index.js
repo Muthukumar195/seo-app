@@ -3,7 +3,7 @@ var router = express.Router();
 const sec = require('search-engine-client');
 /* GET home page. */
 router.get('/dashboard', function(req, res, next) {
-  res.json('Daffodills India');	
+  res.json('Search Engine');	
 });
 
 router.get('/google', function(req, res, next) {
@@ -89,10 +89,22 @@ router.post('/search', function(req, res, next) {
 
 router.get('/keywords', function(req, res, next) {
 	req.getConnection(function(err, connection){		
-		var query = connection.query('SELECT search_keyword FROM search',function(err, rows){
+		var query = connection.query('SELECT DISTINCT search_keyword FROM search',function(err, rows){
 			if(err){				
 			  res.json({'status':false, 'message': err});
 			}
+			res.json(rows);
+		});
+	});
+});
+
+router.get('/searchHistory', function(req, res, next) {
+	var userId = req.query.id;          
+	req.getConnection(function(err, connection){		
+		var query = connection.query(`SELECT search_keyword, created_at FROM search WHERE user_id = ${userId}`,function(err, rows){
+			if(err){				
+			  res.json({'status':false, 'message': err});
+			}			
 			res.json(rows);
 		});
 	});

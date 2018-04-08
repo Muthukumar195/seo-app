@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import _ from 'lodash';
-import { dashboard } from '../../redux/actions/dashboardAction';
-
+import moment from 'moment'
+import { searchHistory } from '../../redux/actions/profileAction';
 
 const mapStateToProps = (state) => {
   return {
-    dashboardResult: state.dashboardReducer.dashboard
+   histroyResult: state.profileReducer.history
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return {  
-    dashboard: (wel)=>{
-      dispatch(dashboard(wel))
+    searchHistory: (wel)=>{
+      dispatch(searchHistory(wel))
     }
   } 
 }
@@ -23,34 +23,41 @@ const Profile = class Profile extends Component {
     super(props);
     this.state = {
       welcome : '',
-	  authId : localStorage.getItem('authId')
+	    authId : localStorage.getItem('authId'),
+      history : [],
     }
 
   }
 
-
-
-
   componentDidMount(){
-   this.props.dashboard('Welcome');
+    console.log(moment());
+   this.props.searchHistory(this.state.authId);
   }
 
   componentWillReceiveProps(nextprops){ 
-	
+    if(!_.isEmpty(nextprops.histroyResult)){	
+      this.setState({history:nextprops.histroyResult});
+    }
   }
   
-  render() {
-	
- 
+render() {
     return (      
-        <div className="container-fulid margin-t-10">
-			<div className="row">
-			  <div className="col-md-2">
-			       <h5 className="heading">saasasas </h5> 
-			  </div>
-			</div>
-        </div>    
-      )
+      <div className="container-fulid">
+        <div className="row">
+          <div className="col-md-2">
+            <h5 className="heading">My Activity </h5>
+              {this.state.history.map((his, index)=>{
+                 return(
+                    <div key={index}>
+                     <p>{his.search_keyword}</p>
+                     <p>{moment(his.created_at).format('DD-MM-YYYY HH:mm')}</p>
+                    </div>
+                  ) 
+              })} 
+          </div>
+        </div>
+      </div>    
+    )
   }
 }
 
@@ -59,4 +66,4 @@ const ProfileConnected = connect(
   mapDispatchToProps
 )(Profile)
 
-export default ProfileConnected
+export default ProfileConnected;
