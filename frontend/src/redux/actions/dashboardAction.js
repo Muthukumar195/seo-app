@@ -65,14 +65,13 @@ export function googleStatus(status, result='', error){
     }
 }
 
-export const  google =  (keyword, adv, file)=>{
+export const  google =  (keyword, file)=>{
+
     return (dispatch)=>{
         dispatch(googleStatus("LOADING")); 
         var query = "";
-        if(adv){
-           if(file !==""){
-            query += "&FileType="+file;
-           }  
+        if(file !== ""){         
+            query += "&FileType="+file;        
         }     
         axios({  
             method: 'GET',
@@ -97,15 +96,14 @@ export function yahooStatus(status, result='', error){
     }
 }
 
-export const  yahoo =  (keyword, adv, file)=>{
+export const  yahoo =  (keyword, file)=>{
     return (dispatch)=>{
         dispatch(yahooStatus("LOADING")); 
-         var query = "";
-        if(adv){
+         var query = "";       
            if(file !==""){
             query += "&FileType="+file;
            }  
-        }       
+      
         axios({  
             method: 'GET',
             url: `${PORT}/api/yahoo?q=${keyword+query}`,      
@@ -130,15 +128,14 @@ export function bingStatus(status, result='', error){
     }
 }
 
-export const  bing =  (keyword, adv, file)=>{
+export const  bing =  (keyword, file)=>{
     return (dispatch)=>{
         dispatch(bingStatus("LOADING")); 
-         var query = "";
-        if(adv){
+         var query = "";      
            if(file !==""){
             query += "&FileType="+file;
-           }  
-        }       
+           } 
+     
         axios({  
             method: 'GET',
             url: `${PORT}/api/bing?q=${keyword+query}`,      
@@ -163,15 +160,15 @@ export function askStatus(status, result='', error){
     }
 }
 
-export const  ask =  (keyword, adv, file)=>{
+export const  ask =  (keyword, file)=>{
     return (dispatch)=>{
         dispatch(askStatus("LOADING"));
          var query = "";
-        if(adv){
+      
            if(file !==""){
             query += "&FileType="+file;
            }  
-        }        
+   
         axios({  
             method: 'GET',
             url: `${PORT}/api/ask?q=${keyword+query}`,      
@@ -209,6 +206,34 @@ export const  searchKey =  (search, authId)=>{
           })
         .then((response)=> {
            dispatch(searchKeyStatus("SUCCESS", response.data))
+        })
+        .catch((error)=> {
+          console.log(error);
+        });
+    }
+
+}
+
+
+export function imageSearchStatus(status, result='', error){  
+    return {
+        type : RC.IMAGE_SEARCH,
+        status,
+        result,
+        error
+    }
+}
+
+export const  imageSearch =  (search)=>{
+    return (dispatch)=>{
+        dispatch(imageSearchStatus("LOADING")); 
+        axios({  
+            method: 'POST',
+            url: `${PORT}/api/imageSearch`, 
+           data: {searchKey: search}     
+          })
+        .then((response)=> {
+           dispatch(imageSearchStatus("SUCCESS", response.data))
         })
         .catch((error)=> {
           console.log(error);

@@ -7,7 +7,8 @@ const initialState = {
 	bing : '',
 	ask :'',
   searchKey:'',
-  keywords:[]
+  keywords:[],
+  imageSearch : []
   }
 
   export default function dashboardReducer(state = initialState, action) {
@@ -47,6 +48,12 @@ const initialState = {
           ...state,
           status: action.status,
           ask: action.result
+        } 
+  case RC.IMAGE_SEARCH:
+        return {
+          ...state,
+          status: action.status,
+          imageSearch: action.result  
         }  
       default:
         return state

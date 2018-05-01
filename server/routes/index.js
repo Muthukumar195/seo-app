@@ -1,21 +1,29 @@
 var express = require('express');
 var router = express.Router();
 const sec = require('search-engine-client');
+var stemmer = require('stemmer');
+sw = require('stopword');
+var Scraper = require ('images-scraper')
+var google = new Scraper.Google();
+var default_options={ 
+    agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36",
+    lang: "en-US,en;q=0.9",
+    show: true,
+};
 /* GET home page. */
 router.get('/dashboard', function(req, res, next) {
   res.json('Search Engine');	
 });
 
 router.get('/google', function(req, res, next) {
-	console.log(req.query)
 	
-	var keyword = req.query.q;
+	var keyword = keywordStemming(req.query.q);
 	var fileType = req.query.FileType;
 	if(fileType !== undefined){
 		console.log('comes')
 		keyword += " filetype:"+fileType;
 	}	
-	sec.google(keyword).then(function(result){
+	sec.google(keyword, default_options).then(function(result){
     res.json(result);	
 	console.log(result);
 	});
@@ -23,7 +31,7 @@ router.get('/google', function(req, res, next) {
 
 router.get('/yahoo', function(req, res, next) {
 	console.log(req.query)
-	var keyword = req.query.q;
+	var keyword = keywordStemming(req.query.q);
 	var fileType = req.query.FileType;
 	if(fileType !== undefined){
 		keyword += " filetype:"+fileType;
@@ -36,7 +44,7 @@ router.get('/yahoo', function(req, res, next) {
 
 router.get('/bing', function(req, res, next) {
 	console.log(req.query)
-	var keyword = req.query.q;
+	var keyword = keywordStemming(req.query.q);
 	var fileType = req.query.FileType;
 	if(fileType !== undefined){
 		keyword += " filetype:"+fileType;
@@ -49,7 +57,7 @@ router.get('/bing', function(req, res, next) {
 
 router.get('/ask', function(req, res, next) {
 	console.log(req.query)
-	var keyword = req.query.q;
+	var keyword = keywordStemming(req.query.q);
 	var fileType = req.query.FileType;
 	if(fileType !== undefined){
 		keyword += " filetype:"+fileType;
@@ -60,8 +68,9 @@ router.get('/ask', function(req, res, next) {
 	});
 });
 
-router.post('/search', function(req, res, next) {	
-	var keyword = req.body.searchKey;
+router.post('/search', function(req, res, next) {
+	var keyword = keywordStemming(req.body.searchKey);
+	console.log('result rewoersd', keyword)
 	var userId;
 	if(req.body.id !== null){
 		userId = req.body.id;
@@ -86,6 +95,19 @@ router.post('/search', function(req, res, next) {
 		});
 });
 
+function keywordStemming(keyword){
+	var stemmings = [];
+// console.log(stemmings);	
+var stopWord = keyword.split(' ');
+var newWords = sw.removeStopwords(stopWord)
+	newWords.forEach((words, i)=>{	
+		var stemmingWord = stemmer(words);
+		stemmings.push(stemmingWord);
+	});
+	var stemmingCombine = stemmings.join(" ");
+	return stemmingCombine;
+}
+
 
 router.get('/keywords', function(req, res, next) {
 	req.getConnection(function(err, connection){		
@@ -108,6 +130,26 @@ router.get('/searchHistory', function(req, res, next) {
 			res.json(rows);
 		});
 	});
+});
+
+router.post('/imageSearch', function(req, res, next) {
+	var keyword = req.body.searchKey;
+	console.log(keyword)
+	google.list({
+	    keyword: keyword,
+	    num: 50,
+	    detail: true,
+	    nightmare: {
+	      //  show: true
+	    }
+	})
+	.then(function (result) {
+	     res.json(result);
+	  	 console.log('first 10 results from google', results);
+	}).catch(function(err) {
+	    console.log('err', err);
+	});
+ 
 });
 
 module.exports = router;

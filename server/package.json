@@ -10,9 +10,12 @@
     "express": "~4.15.5",
     "express-myconnection": "^1.0.4",
     "hbs": "~4.0.1",
+    "images-scraper": "^2.0.11",
     "morgan": "~1.9.0",
     "mysql": "^2.15.0",
     "search-engine-client": "^1.2.6",
-    "serve-favicon": "~2.4.5"
+    "serve-favicon": "~2.4.5",
+    "stemmer": "^1.0.2",
+    "stopword": "^0.1.10"
   }
 }

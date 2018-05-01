@@ -5,7 +5,7 @@ import _ from 'lodash';
 import Modal from 'react-responsive-modal';
 import 'react-responsive-modal/lib/react-responsive-modal.css';   
 import Autosuggest from 'react-autosuggest';
-import { dashboard, keywords, google, yahoo, bing, ask, searchKey } from '../../redux/actions/dashboardAction';
+import { dashboard, keywords, google, yahoo, bing, ask, searchKey, imageSearch } from '../../redux/actions/dashboardAction';
 import { register, login } from '../../redux/actions/authAction';
 
 const getSuggestionValue = suggestion => suggestion.search_keyword;
@@ -23,6 +23,7 @@ const mapStateToProps = (state) => {
 	yahooResult: state.dashboardReducer.yahoo,
 	bingResult: state.dashboardReducer.bing,
 	askResult: state.dashboardReducer.ask,
+	imageResult: state.dashboardReducer.imageSearch,
 	searchResult: state.dashboardReducer.searchKey,
 	auth: state.authReducer.auth
   }
@@ -36,20 +37,23 @@ const mapDispatchToProps = (dispatch) => {
     keywords: ()=>{
       dispatch(keywords())
     },
-	 google: (keyword, adv, file)=>{
-      dispatch(google(keyword, adv, file))
+	 google: (keyword, file)=>{
+      dispatch(google(keyword, file))
     },
-	 yahoo: (keyword, adv, file)=>{
-      dispatch(yahoo(keyword, adv, file))
+	 yahoo: (keyword,  file)=>{
+      dispatch(yahoo(keyword, file))
     },
-	bing: (keyword, adv, file)=>{
-      dispatch(bing(keyword, adv, file))
+	bing: (keyword, file)=>{
+      dispatch(bing(keyword, file))
     },
-	ask: (keyword, adv, file)=>{
-      dispatch(ask(keyword, adv, file))
+	ask: (keyword, file)=>{
+      dispatch(ask(keyword, file))
     },
     searchKey: (search, authId)=>{
       dispatch(searchKey(search, authId))
+    },
+    imageSearch: (search)=>{
+      dispatch(imageSearch(search))
     },
 	register: (formData)=>{
       dispatch(register(formData))
@@ -93,7 +97,9 @@ const Dashboard = class Dashboard extends Component {
 	  authId : localStorage.getItem('authId'),
 	  value: '',
       suggestions: [],
-      keywords : []
+      keywords : [],
+      images:[],
+      showImage:false
     }
 	this.searchForm = this.searchForm.bind(this);
 	this.loginSubmit = this.loginSubmit.bind(this);
@@ -106,11 +112,12 @@ const Dashboard = class Dashboard extends Component {
 	  console.log(this.state.searchKeyword)  
 	  if(this.state.searchKeyword !==""){
 	  	this.setState({searchFlag : true, matchesLinks : '', searchKeywordErr:''})
-		this.props.google(this.state.searchKeyword, this.state.advanceSearch, this.state.fileType);
-		this.props.yahoo(this.state.searchKeyword, this.state.advanceSearch, this.state.fileType);
-		this.props.bing(this.state.searchKeyword, this.state.advanceSearch, this.state.fileType);
-		this.props.ask(this.state.searchKeyword, this.state.advanceSearch, this.state.fileType);
+		this.props.google(this.state.searchKeyword, this.state.fileType);
+		this.props.yahoo(this.state.searchKeyword, this.state.fileType);
+		this.props.bing(this.state.searchKeyword, this.state.fileType);
+		this.props.ask(this.state.searchKeyword, this.state.fileType);
 		this.props.searchKey(this.state.searchKeyword, this.state.authId);
+		this.props.imageSearch(this.state.searchKeyword);
 	}else{
 		 this.setState({searchKeywordErr : 'Search your keyword'});	
 	}	
@@ -207,12 +214,15 @@ const Dashboard = class Dashboard extends Component {
 	  this.setState({authUsername:null, authEmail:null, authId:null, email:'', password:''})
   }
 
+ 
+
   componentDidMount(){
    this.props.dashboard('Welcome');
    this.props.keywords();
   }
 
   componentWillReceiveProps(nextprops){ 
+  	console.log('imagwes', nextprops.imageResult)
 	 if(nextprops.auth.authdicated){
 		 console.log('comes')
 		var userName =  nextprops.auth.user.first_name +' '+ nextprops.auth.user.last_name;
@@ -235,34 +245,36 @@ const Dashboard = class Dashboard extends Component {
      var yahooRes = "";
      var askRes = "";
      var bingRes = "";
+     var yahooResType = false;
+     var askResType = false;
+     var bingResType = false;     
      console.log(nextprops)
      if(nextprops.yahooResult){
      	yahooRes = nextprops.yahooResult;
-     		console.log('if yahoo')
-     }else{
-     	console.log('else yahoo')
+     	yahooResType = true;
+     }else{     
      	yahooRes = nextprops.googleResult
      }
-     if(nextprops.bingResult){     	
+     if(!_.isEmpty(nextprops.bingResult)){     	
      	bingRes = nextprops.bingResult
-     	console.log('if bing')
-     }else{
-     	console.log('else bing')
+     	bingResType = true;
+     }else{     
      	bingRes = nextprops.googleResult
      }
-     if(nextprops.askResult){
+     if(!_.isEmpty(nextprops.askResult.links)){
      	askRes = nextprops.askResult
-     	console.log('if askRes')
+     	askResType = true;
      }else{
-     	console.log('else askRes')
      	askRes = nextprops.googleResult
      }
+      bingRes = _.uniq(bingRes.links);
 		this.setState({
 		  welcome: nextprops.dashboardResult,
 		  google : nextprops.googleResult,
 		  yahoo : yahooRes,
 		  bing : bingRes,
-		  ask : askRes
+		  ask : askRes,
+		  images : nextprops.imageResult
 		},()=>{
 			  if(this.state.google !== "" && this.state.yahoo !== ""){
 				var googleLinks = this.state.google.links;
@@ -270,6 +282,30 @@ const Dashboard = class Dashboard extends Component {
 				//var bingLinks = this.state.bing.links;
 				//var askLinks = this.state.ask.links;
 				   var matchLinks = _.intersectionWith(googleLinks, yahooLinks, _.isEqual);
+				   console.log(matchLinks.length,'ssssssssssssssssss')
+				   if(_.isEmpty(matchLinks) || matchLinks.length <= 2){
+				        var matches = [];
+
+				   		// var	googleSuffle =  _.shuffle(googleLinks)
+				   		var	googleSuffle = googleLinks;
+				   		for(var i= 0; googleSuffle < 10; i++){
+				   			console.log(googleSuffle);  
+				   			matches.push(googleSuffle[i]);
+				   		}
+				   		console.log(matches)
+				   		matchLinks = matches;
+				   }
+				 
+				   		var googleMatch, googleMatchCnt, yahooMatch, yahooMatchCnt;
+				         googleMatch = _.intersectionWith(matchLinks, googleLinks, _.isEqual);
+						 googleMatchCnt = googleMatch.length;
+						 yahooMatch = _.intersectionWith(matchLinks, yahooLinks, _.isEqual);
+						 yahooMatchCnt = yahooMatch.length;
+						
+					
+						var googlePrecision = ((matchLinks.length /  googleMatchCnt) * 100);
+						console.log(googlePrecision)
+
 					this.setState({matchesLinks : matchLinks})
 			  }
 			})
@@ -316,8 +352,9 @@ onOpenModal = () => {
   render() {
 	
 	   const { open, loginForm, authEmail, firstNameErr, lastNameErr, emailErr, passwordErr,
-	   	confirmPasswordErr, searchKeywordErr, value, suggestions
+	   	confirmPasswordErr, searchKeywordErr, value, suggestions, images
 	    } = this.state;
+	 
 
     // Autosuggest will pass through all these props to the input.
     const inputProps = {
@@ -327,124 +364,12 @@ onOpenModal = () => {
     };
  
     return (      
-        <div className="container-fulid margin-t-10">
-			<div className="row">
-			  <div className="col-md-2">
-			       <h5 className="heading">{this.state.welcome} </h5> 
-			  </div>
-			  <div className="col-md-6">
-			       <form onSubmit={this.searchForm} method="post">
-				   <div className="form-group">
-				      <div className="form-row">
-				         <div className="col-md-8">
-				            <Autosuggest
-				               suggestions={suggestions}
-				               onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-				               onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-				               getSuggestionValue={getSuggestionValue}
-				               renderSuggestion={renderSuggestion}
-				               inputProps={inputProps}		      
-				               />
-				            {searchKeywordErr !=="" ? <span className="validation-error">{searchKeywordErr}</span> :null}
-				         </div>
-				         <div className="col-md-4">
-				            <button type="submit" className="btn btn-primary btn-sm" name="search">Search</button>
-				         </div>
-				      </div>
-				   </div>
-				   <div className="form-row">
-				      <div className="col-md-3"><span className="mar-right-10">Advance Search</span>
-				         <input type="checkbox" name="vehicle" value="true"
-				            onChange={(e)=>{					
-				         this.setState({advanceSearch : e.target.checked})
-				         }}/>
-				      </div>
-				      <div className="col-md-2 ">
-				         {this.state.advanceSearch ? (
-				         <select className="form-control" onChange={(e)=>
-				            {				
-				            this.setState({fileType : e.target.value})
-				            }}>
-				            <option value="">File Types</option>
-				            <option value="pdf">PDF</option>
-				            <option value="word">Word</option>
-				            <option value="txt">Txt</option>
-				            <option value="excel">Excel</option>
-				         </select>
-				         ):null}
-				      </div>
-				   </div>
-				</form>
-			  </div>
-
-			  <div className="col-md-4 text-right">
-			  	{authEmail === null ? (
-		 			<button onClick={this.onOpenModal} className="btn btn-success  btn-sm mar-right-10">login</button>
-				):(<div className="user-info ">
-					<span className="mar-right-10">{authEmail}</span>
-					<Link to="/profile">My Profile</Link>
-					<a  href="javascript:void(0);"onClick={this.logout}>log out</a>
-				</div>
-				)}
-			  </div>
-			</div>
-
-			{ this.state.searchFlag ? (
-			<div className="container">
-			<div className="row search-engine">
-			<div className="col-md-12 top-result ">
-			<h6>Top ranking websites</h6>
-			<div className="box">
-			{  this.state.matchesLinks !== '' ? (
-				this.state.matchesLinks.map((matchLinks, i)=>{
-				    return(<span  key={i}><strong>Rank: {i+1}</strong> <a href={matchLinks}> {matchLinks}</a><br /></span>)
-				})	
-				):(<span>Waiting...</span>)
-			}
-			</div>
-			</div>	
-			<div className="col-md-12 google">
-			<img src="assets/img/google.png" alt="google" title="google" />
-			{  this.state.google !== '' ? (
-				this.state.google.links.map((googlelinks, i)=>{
-				    return(<div  key={i}><a href={googlelinks}> {googlelinks}</a><br /></div>)
-				})	
-				):(<div>your search keyword is loading...</div>)
-			}
-			</div>
-			<div className=" col-md-12 yahoo">  
-			<img src="assets/img/yahoo.png" alt="yahoo" title="yahoo" />
-			{  this.state.yahoo !== '' ? (
-				this.state.yahoo.links.map((yahoolinks, i)=>{
-				    return(<div key={i}><a href={yahoolinks}> {yahoolinks}</a><br /></div>)
-				})	
-				):(<div>your search keyword is loading...</div>)
-			}
-			</div>
-			<div className="col-md-12 bing">  
-			<img src="assets/img/bing.png" alt="bing" title="bing" />
-			{  this.state.bing !== '' ? (
-				this.state.bing.links.map((binglinks, i)=>{
-				    return(<div key={i}><a href={binglinks}> {binglinks}</a><br /></div>)
-				})	
-				):(<div>your search keyword is loading...</div>)
-			}
-			</div>
-			<div className="col-md-12 ask">      
-			<img src="assets/img/ask.png" alt="Ask" title="Ask" />
-			{  this.state.ask!== '' ? (
-				this.state.ask.links.map((asklinks, i)=>{
-				    return(<div key={i}><a href={asklinks}> {asklinks}</a><br /></div>)
-				})	
-				):(<div>your search keyword is loading...</div>)
-			}
-			</div>
-		  </div></div>):null}	
+        <div>		
 		<div className="popup-model">
 			<Modal open={open} onClose={this.onCloseModal} >
 			{loginForm ?(
 			<div className="login form">
-			  <h3>Login</h3>
+			  <h5>Login</h5>
 			  <form  onSubmit={this.loginSubmit} method="post">
 				<div className="form-group">
 					<div className="form-row">
@@ -482,7 +407,7 @@ onOpenModal = () => {
 			  </form>
 			  </div> ):(
 			  <div className="register form">
-			  <h3>Register</h3>
+			  <h5>Register</h5>
 			  <form  onSubmit={this.registerSubmit} method="post">
 				<div className="form-group">
 				<div className="form-row">
@@ -535,7 +460,7 @@ onOpenModal = () => {
 						<div className="col-md-12">
 						<div className="float-r">
 						<a href="javascript:void(0)" onClick={()=>{
-							this.setState({loginForm : true})
+								this.setState({loginForm : true})
 							}}>Login</a>
 
 						</div>
@@ -549,6 +474,304 @@ onOpenModal = () => {
 			  )}
 			</Modal>
 		  </div> 
+	  <div class="support-bar-top" id="raindrops-green">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                  <div class="contact-info">
+                
+                  </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <div class="contact-admin">
+						{authEmail === null ? (
+							 <a onClick={this.onOpenModal} class="pointer" ><i class="fa fa-user"></i> Login</a>
+						):(
+							<div className="user-info ">
+							<span className="profile-name">{authEmail}</span>
+							<Link to="/profile">My Profile</Link>
+							<a  href="javascript:void(0);"onClick={this.logout}>log out</a>
+							</div>
+						)}
+                      <a class="pointer" onClick={()=>{                         
+							this.setState({ open: true, loginForm : false})
+							}} ><i class="fa fa-user-plus"></i> Registration</a>
+                     
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   <section id="particles-js" class="header-area">
+      <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+             
+                <ol class="carousel-indicators">
+                    <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>                  
+                </ol>
+             
+
+                 <div class="carousel-inner" role="listbox">
+                    <div class="item active carousel-thumb1">
+                       <div class="container">
+                           <div class="row">
+                               <div class="col-md-8 col-md-offset-2 text-center">
+                                   <div class="header-section-wrapper">
+                                       <div class="header-section-top-part">
+                                           <h5>BEST PRIVATE SEARCH</h5>
+                                           <h1>WEB SEARCH ENGINE</h1>
+                                           <p>
+The results of a search for the term "lunar eclipse" in a web-based image search engine
+A 'web search engine' is a software system that is designed to search for information on the World Wide Web.</p>
+                                       </div>
+                                       <div class="header-section-bottom-part">
+                                           <div class="domain-search-from">
+                                               <form onSubmit={this.searchForm} method="post">
+                                                <Autosuggest
+									               suggestions={suggestions}
+									               onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+									               onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+									               getSuggestionValue={getSuggestionValue}
+									               renderSuggestion={renderSuggestion}
+									               inputProps={inputProps}		      
+									               />
+									            {searchKeywordErr !=="" ? <span className="validation-error">{searchKeywordErr}</span> :null}
+                                                   <select onChange={(e)=>
+											            {				
+											            this.setState({fileType : e.target.value})
+											            }}>
+											            <option value="0">File Types</option>
+											            <option value="pdf">PDF</option>
+											            <option value="word">Word</option>
+											            <option value="txt">Txt</option>
+											            <option value="excel">Excel</option>
+											         </select>  
+                                                   <input type="submit" name="search" value="Search" />
+                                               </form>
+                                           </div>
+                                           <div class="domain-rate-wrapper">			
+                                              <div class="single-domain-rate-circle">
+                                                   <p onClick={()=>{this.setState({searchFlag:true, showImage:false})}}> All</p>
+                                               </div>
+                                               <div class="single-domain-rate-circle">
+                                                   <p onClick={()=>{this.setState({searchFlag:false, showImage:true})}} >Image </p>
+                                               </div>                                             
+                                           </div>
+                                       </div>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                    </div>
+                  </div>
+      </div>
+   </section>
+  
+
+  <div class="clearfix"></div>
+
+  
+  <div class="admin-section" id="raindrops">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+       
+          <div class="admin-content">
+         
+            <div class="admin-text">
+              <h2>Get All Browser Result</h2>
+            </div>
+          
+            <div class="admin-user">
+            {authEmail === null ? (
+              <button name="login" onClick={this.onOpenModal}>sign in</button>
+              ):null}
+              <button name="register"  onClick={()=>{                         
+							this.setState({ open: true, loginForm : false})
+							}}>register now</button>
+            </div>
+       
+          </div>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+  { this.state.searchFlag ? (
+   <section id="service" class="services-section section-padding section-background">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">        
+          <div class="section-header">
+            <h2>Top <span>Ranking</span></h2>
+            <p><img src="assets/img/icon.png" alt="icon" /></p>
+          </div>      
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">     
+          <div class="service-content">
+         	{  this.state.matchesLinks !== '' ? (
+				this.state.matchesLinks.map((matchLinks, i)=>{
+				    return(<span  key={i}><strong>Rank: {i+1}</strong> <a href={matchLinks}> {matchLinks}</a><br /></span>)
+				})	
+				):(<span>Waiting...</span>)
+			}           
+          </div>        
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+        
+          <div class="section-header">
+            <h2>Google <span>Result</span></h2>
+            <p><img src="assets/img/icon.png" alt="icon" /></p>
+          </div>
+      
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+     
+          <div class="service-content">
+         	{  this.state.google !== '' ? (
+				this.state.google.links.map((googlelinks, i)=>{
+				    return(<div  key={i}><a href={googlelinks}> {googlelinks}</a><br /></div>)
+				})	
+				):(<div>your search keyword is loading...</div>)
+			}           
+          </div>
+        
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+        
+          <div class="section-header">
+            <h2>Yahoo <span>Result</span></h2>
+            <p><img src="assets/img/icon.png" alt="icon" /></p>
+          </div>
+      
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+     
+          <div class="service-content">
+         	{  this.state.yahoo !== '' ? (
+				this.state.yahoo.links.map((yahoolinks, i)=>{
+				    return(<div key={i}><a href={yahoolinks}> {yahoolinks}</a><br /></div>)
+				})	
+				):(<div>your search keyword is loading...</div>)
+			}           
+          </div>
+        
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+        
+          <div class="section-header">
+            <h2>Bing <span>Result</span></h2>
+            <p><img src="assets/img/icon.png" alt="icon" /></p>
+          </div>
+      
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+     
+          <div class="service-content">
+         	{  this.state.bing !== '' ? (		
+				this.state.bing.map((binglinks, i)=>{
+				    return(<div key={i}><a href={binglinks}> {binglinks}</a><br /></div>)
+				})	
+				):(<div>your search keyword is loading...</div>)
+			}
+           
+          </div>
+        
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+        
+          <div class="section-header">
+            <h2>Ask <span>Result</span></h2>
+            <p><img src="assets/img/icon.png" alt="icon" /></p>
+          </div>
+      
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+     
+          <div class="service-content">
+         	{  this.state.ask!== '' ? (
+				this.state.ask.links.map((asklinks, i)=>{
+				    return(<div key={i}><a href={asklinks}> {asklinks}</a><br /></div>)
+				})	
+				):(<div>your search keyword is loading...</div>)
+			}
+           
+          </div>
+        
+        </div>
+      </div>
+    </div>
+<div class="clearfix"></div>
+  </section>):null}
+
+	{this.state.showImage ? (
+		 <div id="portfolio" class="gallery section-padding section-background">
+   <div class="container">
+      <div class="row">
+         <div class="col-md-12">
+            <div class="section-header">
+               <h2>Result <span>Images</span></h2>
+               <p><img src="assets/img/icon.png" alt="icon"/></p>
+            </div>
+         </div>
+      </div>
+      <div class="row">
+     	{  !_.isEmpty(images) ? (
+     			images.map((img, i)=>{
+				return(<div class=" col-md-4"  key={i}>
+			            <div class="single-isotope">
+			               <div class="layer"></div>
+			               <div class="isotope-social">
+			                  <a href={img.thumb_url} data-rel="lightcase"><i class="fa fa-search" aria-hidden="true"></i></a>
+			                  <a href="#"><i class="fa fa-link" aria-hidden="true"></i></a>
+			               </div>
+			               <img src={img.thumb_url} alt="gallery"  width={img.thumb_width} height={img.thumb_height}/>
+			            </div>
+			         </div>
+				
+					)
+				})
+     		):null       		
+     		
+		}
+      </div>
+   </div>
+</div>
+		):null}
+
+
+   <div class="clearfix"></div>
+
         </div>    
       )
   }
